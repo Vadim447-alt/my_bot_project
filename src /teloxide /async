@@ -1,1 +1,38 @@
 
+
+use teloxide::prelude::*;
+use teloxide::types::{InlineKeyboardButton, InlineKeyboardMarkup};
+use dotenv::dotenv;
+use std::env;
+
+#[tokio::main]
+async fn main() {
+    dotenv().ok();
+    env_logger::init();
+
+    // Берём токен из переменной окружения TELOXIDE_TOKEN
+    let bot = Bot::from_env().auto_send();
+
+    teloxide::repl(bot, |message| async move -> Result<(), teloxide::RequestError> {
+        let text = message.update.text().unwrap_or_default();
+
+        match text {
+            "/start" => {
+                let keyboard = InlineKeyboardMarkup::new(vec![vec![
+                    InlineKeyboardButton::callback("💎 Гемы", "buy_gems"),
+                    InlineKeyboardButton::callback("🪙 Робуксы", "buy_robux"),
+                ]]);
+
+                bot.send_message(message.chat.id, "Привет! Что хочешь купить?")
+                    .reply_markup(keyboard)
+                    .await?;
+            }
+            _ => {
+                bot.send_message(message.chat.id, "Я пока не понял тебя. Используй /start.")
+                    .await?;
+            }
+        }
+        Ok(())
+    })
+    .await;
+}
